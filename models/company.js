@@ -46,7 +46,13 @@ class Company {
 
   /** Find all companies.
    *
-   * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
+   * searchFilters is an optional parameter,
+   * and can contain a few properties:
+   * - minEmployees
+   * - maxEmployees
+   * - name (case-insensitive, partial matches (ILIKE query))
+   * 
+   * Returns [{ handle, name, description, numEmployees, logourl }]
    * */
 
   static async findAll(searchFilters = {}) {
