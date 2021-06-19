@@ -4,7 +4,7 @@ const { BadRequestError } = require("../expressError");
  * 
  * Given a set of data, map over and update based on index,
  * then return an object listing the Columns that were set,
- * as well as the values they were given.
+ * as well as an array of the values they were given.
  */
 
 function sqlForPartialUpdate(dataToUpdate, jsToSql) {
