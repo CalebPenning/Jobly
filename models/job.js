@@ -43,11 +43,79 @@ class Job {
      */
 
     static async findAll({ minSalary, hasEquity, title } = {}) {
+        let query = (
+            `SELECT j.id
+                    j.title,
+                    j.salary,
+                    j.equity,
+                    j.company_handle as "companyHandle",
+                    c.name as "companyName"
+            FROM jobs j
+                LEFT JOIN companies as c ON c.handle = j.company_handle;`)
         
+        let whereExpressions = []
+        let queryValues = []
+
+        if (minSalary !== undefined) {
+            queryValues.push(minSalary)
+            whereExpressions.push(`salary >= $${queryValues.length}`)
+        }
+      
+        if (hasEquity === true) {
+            whereExpressions.push(`equity > 0`)
+        }
+      
+        if (title !== undefined) {
+            queryValues.push(`%${title}%`)
+            whereExpressions.push(`title ILIKE $${queryValues.length}`)
+        }
+      
+        if (whereExpressions.length > 0) {
+            query += " WHERE " + whereExpressions.join(" AND ")
+        }
+      
+          // Finalize query and return results
+      
+          query += " ORDER BY title";
+          const jobsRes = await db.query(query, queryValues)
+          return jobsRes.rows
     }
 
-    static async get(id) {
+    /** Given a job's ID, return data about job.
+     * 
+     *  Returns { id, title, salary, equity, companyHandle, company }
+     *  company is presented as { handle, name, description, numEmployees, logoUrl }
+     * 
+     *  Throws NotFoundError (404) if not found. 
+     */
 
+    static async get(id) {
+        const jobRes = await db.query(
+            `SELECT id,
+                    title,
+                    salary,
+                    equity,
+                    company_handle AS "companyHandle"
+            FROM jobs
+            WHERE id = $1`, [id])
+        
+        const job = jobRes.rows[0]
+
+        if (!job) throw new NotFoundError(`No job: ${id}`)
+
+        const companiesRes = await db.query(
+            `SELECT handle,
+                    name,
+                    description,
+                    num_employees AS "numEmployees",
+                    logo_url AS "logoUrl"
+            FROM companies
+            WHERE handle = $1`, [job.companyHandle])
+
+        delete job.companyHandle
+        job.company = companiesRes.rows[0]
+
+        return job
     }
 
     static async update(id, data) {
