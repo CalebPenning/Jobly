@@ -119,10 +119,36 @@ class Job {
     }
 
     static async update(id, data) {
+        const { setCols, values } = sqlForPartialUpdate(data, {})
 
+        const queryVarIdx = `$${values.length + 1}`
+
+        const querySql = `UPDATE jobs
+                          SET ${setCols}
+                          WHERE id = ${queryVarIdx}
+                          RETURNING id,
+                                    title,
+                                    salary,
+                                    equity,
+                                    company_handle AS "companyHandle"`
+        const result = await db.query(querySql, [...values, id])
+        const job = result.rows[0]
+
+        if (!job) throw new NotFoundError(`No job: ${id}`)
+
+        return job
     }
 
     static async remove(id) {
+        const result = await db.query(
+            `DELETE
+            FROM jobs
+            WHERE id = $1
+            RETURNING id`, [id])
         
+        const job = result.rows[0]
+        if (!job) throw new NotFoundError(`No job: ${id}`)
     }
 }
+
+module.exports = Job
