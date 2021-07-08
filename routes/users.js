@@ -5,7 +5,7 @@
 const jsonschema = require("jsonschema");
 
 const express = require("express");
-const { ensureLoggedIn } = require("../middleware/auth");
+const { ensureLoggedIn, ensureAdmin, ensureCorrectUserOrAdmin } = require("../middleware/auth");
 const { BadRequestError } = require("../expressError");
 const User = require("../models/user");
 const { createToken } = require("../helpers/tokens");
@@ -24,10 +24,10 @@ const router = express.Router();
  * This returns the newly created user and an authentication token for them:
  *  {user: { username, firstName, lastName, email, isAdmin }, token }
  *
- * Authorization required: login
+ * Authorization required: admin
  **/
 
-router.post("/", ensureLoggedIn, async function (req, res, next) {
+router.post("/", ensureAdmin, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, userNewSchema);
     if (!validator.valid) {
@@ -118,5 +118,21 @@ router.delete("/:username", ensureLoggedIn, async function (req, res, next) {
   }
 });
 
+/** POST /[username]/jobs/[id] 
+ *  Returns {"applied": jobId}
+ *  
+ *  Authorization required: Admin or same user as params
+ */
+
+router.post("/:username/jobs/:id", ensureCorrectUserOrAdmin, async function (req, res, next) {
+  try {
+    const jobId = +req.params.id
+    await User.applyToJob(req.params.username, jobId)
+    return res.json({applied: jobId})
+  }
+  catch(err) {
+    return next(err)
+  }
+})
 
 module.exports = router;

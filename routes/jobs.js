@@ -53,9 +53,11 @@ router.post("/", ensureAdmin, async (req, res, next) => {
 
 router.get("/", async (req, res, next) => {
     const q = req.query
+    console.log("HELLO AM I EVEN HITTING THIS ", q)
     // if minSalary is attached, turn into int/boolean
     if (q.minSalary !== undefined) q.minSalary = +q.minSalary
     q.hasEquity = q.hasEquity === "true"
+    
     try {
         const validator = jsonschema.validate(q, jobSearchSchema)
         if (!validator.valid) {

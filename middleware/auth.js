@@ -84,4 +84,6 @@ function ensureCorrectUserOrAdmin(req, res, next) {
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
+  ensureCorrectUserOrAdmin,
+  ensureAdmin,
 };
