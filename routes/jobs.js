@@ -41,11 +41,10 @@ router.post("/", ensureAdmin, async (req, res, next) => {
 /** GET / =>
  * 
  * { jobs: [ { id, title, salary, equity, companyHandle, companyName }, ... ] }
- * 
+ *  title is mandatory for search.
  *  Can provide optional search terms in query:
  *  - minSalary
  *  - hasEquity (jobs with equity > 0 will only return true, other values will be ignored)
- *  - title (runs ILIKE query for partial, case-insensitive etc matches)
  * 
  *  No authorization required for this route.
  * 
@@ -57,7 +56,7 @@ router.get("/", async (req, res, next) => {
     // if minSalary is attached, turn into int/boolean
     if (q.minSalary !== undefined) q.minSalary = +q.minSalary
     q.hasEquity = q.hasEquity === "true"
-    
+
     try {
         const validator = jsonschema.validate(q, jobSearchSchema)
         if (!validator.valid) {
